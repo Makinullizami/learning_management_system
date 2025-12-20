@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
+import 'my_classes_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final User user;
@@ -27,46 +28,43 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: _selectedIndex == 0 ? backgroundColor : Colors.white,
       body: Stack(
         children: [
-          // Curved Header Background
-          _buildCurvedHeader(),
+          // Curved Header Background (Only for Home)
+          if (_selectedIndex == 0) _buildCurvedHeader(),
 
           // Main Content
           SafeArea(
             child: Column(
               children: [
-                // App Bar Content
-                _buildAppBar(),
-
-                // Scrollable Content
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 8),
-
-                        // Upcoming Task
-                        _buildUpcomingTask(),
-
-                        const SizedBox(height: 32),
-
-                        // Latest Announcement
-                        _buildLatestAnnouncement(),
-
-                        const SizedBox(height: 32),
-
-                        // Class Progress
-                        _buildClassProgress(),
-
-                        // Bottom spacing for nav
-                        const SizedBox(height: 100),
-                      ],
+                // Home Content
+                if (_selectedIndex == 0) ...[
+                  _buildAppBar(),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 8),
+                          _buildUpcomingTask(),
+                          const SizedBox(height: 32),
+                          _buildLatestAnnouncement(),
+                          const SizedBox(height: 32),
+                          _buildClassProgress(),
+                          const SizedBox(height: 100),
+                        ],
+                      ),
                     ),
                   ),
-                ),
+                ] else if (_selectedIndex == 1) ...[
+                  // My Classes Screen
+                  Expanded(
+                    child: MyClassesScreen(
+                      onBack: () => setState(() => _selectedIndex = 0),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
