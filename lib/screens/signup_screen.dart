@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -17,7 +18,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isDarkMode = false;
-
+  bool _isLoading = false;
   // Focus nodes for floating label effect
   final _fullNameFocus = FocusNode();
   final _emailFocus = FocusNode();
@@ -64,60 +65,49 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final screenHeight = constraints.maxHeight;
-          final isSmallScreen = screenHeight < 700;
+      body: Stack(
+        children: [
+          // Main scrollable content
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                // Header section
+                _buildHeader(false),
 
-          return Stack(
-            children: [
-              // Main scrollable content
-              SingleChildScrollView(
-                child: Column(
-                  children: [
-                    // Header section
-                    _buildHeader(isSmallScreen),
-
-                    // Spacer for card overlap
-                    SizedBox(height: isSmallScreen ? 100 : 120),
-
-                    // Wave decoration at bottom
-                    const SizedBox(height: 20),
-                  ],
+                // Sign Up Card - overlapping header
+                Transform.translate(
+                  offset: const Offset(0, -50),
+                  child: _buildSignUpCard(false),
                 ),
-              ),
 
-              // Sign Up Card - positioned to overlap header
-              Positioned(
-                top: isSmallScreen ? 260 : 290,
-                left: 0,
-                right: 0,
-                child: Center(child: _buildSignUpCard(isSmallScreen)),
-              ),
+                // Bottom spacing
+                const SizedBox(height: 24),
+              ],
+            ),
+          ),
 
-              // Back button
-              Positioned(
-                top: MediaQuery.of(context).padding.top + 12,
-                left: 16,
-                child: _buildBackButton(),
-              ),
+          // Back button (fixed position)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 12,
+            left: 16,
+            child: _buildBackButton(),
+          ),
 
-              // Dark mode toggle
-              Positioned(
-                top: MediaQuery.of(context).padding.top + 12,
-                right: 16,
-                child: _buildDarkModeToggle(),
-              ),
-            ],
-          );
-        },
+          // Dark mode toggle (fixed position)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 12,
+            right: 16,
+            child: _buildDarkModeToggle(),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildHeader(bool isSmallScreen) {
+    final topPadding = MediaQuery.of(context).padding.top;
     return Container(
-      height: isSmallScreen ? 300 : 340,
+      height: 320 + topPadding,
       width: double.infinity,
       decoration: BoxDecoration(
         color: primaryColor,
@@ -180,73 +170,75 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ),
 
           // Content
-          Center(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: isSmallScreen ? 50 : 70),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Icon container with rotation
-                  Transform.rotate(
-                    angle: 0.05,
-                    child: Container(
-                      width: isSmallScreen ? 72 : 80,
-                      height: isSmallScreen ? 72 : 80,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          width: 1,
+          SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 40),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Icon container with rotation
+                    Transform.rotate(
+                      angle: 0.05,
+                      child: Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
+                        child: const Icon(
+                          Icons.school,
+                          size: 48,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Title
+                    Text(
+                      'Create Account',
+                      style: GoogleFonts.poppins(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
-                      child: Icon(
-                        Icons.school,
-                        size: isSmallScreen ? 40 : 48,
-                        color: Colors.white,
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    // Subtitle
+                    Text(
+                      'Start your learning journey today',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w300,
+                        color: Colors.white.withValues(alpha: 0.8),
                       ),
                     ),
-                  ),
-
-                  SizedBox(height: isSmallScreen ? 12 : 16),
-
-                  // Title
-                  Text(
-                    'Create Account',
-                    style: GoogleFonts.poppins(
-                      fontSize: isSmallScreen ? 26 : 30,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 0.5,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  // Subtitle
-                  Text(
-                    'Start your learning journey today',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w300,
-                      color: Colors.white.withValues(alpha: 0.8),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -492,9 +484,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: () {
-          // TODO: Handle sign up
-        },
+        onPressed: _isLoading ? null : _handleSignUp,
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
@@ -505,20 +495,78 @@ class _SignUpScreenState extends State<SignUpScreen> {
           elevation: 4,
           shadowColor: primaryColor.withValues(alpha: 0.4),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Sign Up',
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+        child: _isLoading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Sign Up',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.arrow_forward, size: 18),
+                ],
               ),
-            ),
-            const SizedBox(width: 8),
-            const Icon(Icons.arrow_forward, size: 18),
-          ],
-        ),
+      ),
+    );
+  }
+
+  Future<void> _handleSignUp() async {
+    final fullName = _fullNameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    if (fullName.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty) {
+      _showMessage('Please fill in all fields');
+      return;
+    }
+
+    if (password != confirmPassword) {
+      _showMessage('Passwords do not match');
+      return;
+    }
+
+    if (password.length < 6) {
+      _showMessage('Password must be at least 6 characters');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final success = await AuthService.register(fullName, email, password);
+
+    setState(() => _isLoading = false);
+
+    if (success && mounted) {
+      _showMessage('Account created successfully! Please login.');
+      Navigator.of(context).pop();
+    } else {
+      _showMessage('Email already registered');
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: primaryColor,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }

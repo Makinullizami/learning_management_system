@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/auth_service.dart';
 import 'signup_screen.dart';
+import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
   bool _rememberMe = false;
   bool _isDarkMode = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -41,61 +45,42 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final screenHeight = constraints.maxHeight;
-          final screenWidth = constraints.maxWidth;
-          final isSmallScreen = screenHeight < 700;
+      body: Stack(
+        children: [
+          // Main scrollable content
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                // Header section with curve
+                _buildHeader(),
 
-          return Stack(
-            children: [
-              // Background with header
-              SingleChildScrollView(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: Column(
-                    children: [
-                      // Header section with curve
-                      _buildHeader(screenHeight, screenWidth, isSmallScreen),
-
-                      // Spacer for card overlap
-                      SizedBox(height: isSmallScreen ? 120 : 140),
-
-                      // Bottom section
-                      const SizedBox(height: 32),
-                    ],
-                  ),
+                // Login Card - overlapping header
+                Transform.translate(
+                  offset: const Offset(0, -50),
+                  child: _buildLoginCard(),
                 ),
-              ),
 
-              // Login Card - positioned to overlap header
-              Positioned(
-                top: screenHeight * (isSmallScreen ? 0.28 : 0.32),
-                left: 0,
-                right: 0,
-                child: Center(child: _buildLoginCard(isSmallScreen)),
-              ),
+                // Bottom spacing
+                const SizedBox(height: 24),
+              ],
+            ),
+          ),
 
-              // Dark mode toggle button
-              Positioned(
-                top: MediaQuery.of(context).padding.top + 16,
-                right: 16,
-                child: _buildDarkModeToggle(),
-              ),
-            ],
-          );
-        },
+          // Dark mode toggle button (fixed position)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 16,
+            right: 16,
+            child: _buildDarkModeToggle(),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildHeader(
-    double screenHeight,
-    double screenWidth,
-    bool isSmallScreen,
-  ) {
+  Widget _buildHeader() {
+    final topPadding = MediaQuery.of(context).padding.top;
     return Container(
-      height: screenHeight * (isSmallScreen ? 0.38 : 0.42),
+      height: 320 + topPadding,
       width: double.infinity,
       decoration: BoxDecoration(
         color: primaryColor,
@@ -159,61 +144,63 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
 
           // Content
-          Center(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: isSmallScreen ? 40 : 60),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Icon container
-                  Container(
-                    width: isSmallScreen ? 64 : 80,
-                    height: isSmallScreen ? 64 : 80,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.2),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+          SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 40),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Icon container
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
+                          width: 1,
                         ),
-                      ],
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Transform.rotate(
+                        angle: 0.05,
+                        child: const Icon(
+                          Icons.local_library,
+                          size: 44,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
-                    child: Transform.rotate(
-                      angle: 0.05,
-                      child: Icon(
-                        Icons.local_library,
-                        size: isSmallScreen ? 36 : 44,
+
+                    const SizedBox(height: 20),
+
+                    // Title
+                    Text(
+                      'LMS Portal',
+                      style: GoogleFonts.inter(
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
                         color: Colors.white,
+                        letterSpacing: -0.5,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-
-                  SizedBox(height: isSmallScreen ? 16 : 20),
-
-                  // Title
-                  Text(
-                    'LMS Portal',
-                    style: GoogleFonts.inter(
-                      fontSize: isSmallScreen ? 26 : 30,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: -0.5,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -222,12 +209,12 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildLoginCard(bool isSmallScreen) {
+  Widget _buildLoginCard() {
     return Container(
       width: double.infinity,
       constraints: const BoxConstraints(maxWidth: 380),
       margin: const EdgeInsets.symmetric(horizontal: 24),
-      padding: EdgeInsets.all(isSmallScreen ? 24 : 32),
+      padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
         color: surfaceColor,
         borderRadius: BorderRadius.circular(24),
@@ -252,7 +239,7 @@ class _LoginScreenState extends State<LoginScreen> {
           Text(
             'Welcome Back',
             style: GoogleFonts.inter(
-              fontSize: isSmallScreen ? 22 : 24,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
               color: textMainColor,
             ),
@@ -263,7 +250,7 @@ class _LoginScreenState extends State<LoginScreen> {
             style: GoogleFonts.inter(fontSize: 14, color: textMutedColor),
           ),
 
-          SizedBox(height: isSmallScreen ? 24 : 32),
+          const SizedBox(height: 32),
 
           // Email field
           _buildInputField(
@@ -274,7 +261,7 @@ class _LoginScreenState extends State<LoginScreen> {
             keyboardType: TextInputType.emailAddress,
           ),
 
-          SizedBox(height: isSmallScreen ? 16 : 20),
+          const SizedBox(height: 20),
 
           // Password field
           _buildPasswordField(),
@@ -319,7 +306,7 @@ class _LoginScreenState extends State<LoginScreen> {
               // Forgot password
               GestureDetector(
                 onTap: () {
-                  // TODO: Navigate to forgot password
+                  _showForgotPasswordDialog();
                 },
                 child: Text(
                   'Forgot Password?',
@@ -333,12 +320,12 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
 
-          SizedBox(height: isSmallScreen ? 20 : 24),
+          const SizedBox(height: 24),
 
           // Login button
           _buildLoginButton(),
 
-          SizedBox(height: isSmallScreen ? 24 : 32),
+          const SizedBox(height: 32),
 
           // Divider
           Container(
@@ -346,7 +333,7 @@ class _LoginScreenState extends State<LoginScreen> {
             color: _isDarkMode ? Colors.grey.shade700 : Colors.grey.shade200,
           ),
 
-          SizedBox(height: isSmallScreen ? 20 : 24),
+          const SizedBox(height: 24),
 
           // Sign up link
           RichText(
@@ -382,7 +369,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // Need help
           GestureDetector(
             onTap: () {
-              // TODO: Show help dialog
+              _showHelpDialog();
             },
             child: Text(
               'Need Help?',
@@ -531,9 +518,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: () {
-          // TODO: Handle login
-        },
+        onPressed: _isLoading ? null : _handleLogin,
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
@@ -544,20 +529,206 @@ class _LoginScreenState extends State<LoginScreen> {
           elevation: 0,
           shadowColor: primaryColor.withValues(alpha: 0.4),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: _isLoading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Log In',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.arrow_forward, size: 18),
+                ],
+              ),
+      ),
+    );
+  }
+
+  Future<void> _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    debugPrint('=== LOGIN ATTEMPT ===');
+    debugPrint('Email: $email');
+    debugPrint('Password length: ${password.length}');
+
+    if (email.isEmpty || password.isEmpty) {
+      _showMessage('Please fill in all fields');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final user = await AuthService.login(email, password);
+
+      debugPrint('Login result: ${user != null ? "SUCCESS" : "FAILED"}');
+
+      if (!mounted) {
+        debugPrint('Widget not mounted, aborting navigation');
+        return;
+      }
+
+      setState(() => _isLoading = false);
+
+      if (user != null) {
+        debugPrint('Navigating to HomeScreen for user: ${user.fullName}');
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => HomeScreen(user: user)),
+        );
+      } else {
+        debugPrint('Login failed - showing error message');
+        _showMessage('Invalid email or password');
+      }
+    } catch (e) {
+      debugPrint('Login exception: $e');
+      setState(() => _isLoading = false);
+      _showMessage('An error occurred. Please try again.');
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: primaryColor,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  void _showForgotPasswordDialog() {
+    final emailController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: surfaceColor,
+        title: Text(
+          'Reset Password',
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.bold,
+            color: textMainColor,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Log In',
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+              'Enter your email address and we will send you instructions to reset your password.',
+              style: GoogleFonts.inter(fontSize: 14, color: textMutedColor),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: emailController,
+              decoration: InputDecoration(
+                hintText: 'Email address',
+                filled: true,
+                fillColor: inputBgColor,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
-            const SizedBox(width: 8),
-            const Icon(Icons.arrow_forward, size: 18),
           ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.inter(color: textMutedColor),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _showMessage('Password reset link sent to your email');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryColor,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(
+              'Send',
+              style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showHelpDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: surfaceColor,
+        title: Text(
+          'Need Help?',
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.bold,
+            color: textMainColor,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Contact our support team:',
+              style: GoogleFonts.inter(color: textMutedColor),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Icon(Icons.email_outlined, color: primaryColor, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'support@lmsportal.com',
+                  style: GoogleFonts.inter(color: textMainColor),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(Icons.phone_outlined, color: primaryColor, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  '+62 812 3456 7890',
+                  style: GoogleFonts.inter(color: textMainColor),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryColor,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(
+              'Close',
+              style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
       ),
     );
   }
