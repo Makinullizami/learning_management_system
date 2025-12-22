@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'course_details_screen.dart';
 
 class MyClassesScreen extends StatelessWidget {
   final VoidCallback onBack;
@@ -36,6 +37,7 @@ class MyClassesScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
               children: [
                 _buildCourseCard(
+                  context: context,
                   semester: '2021/2',
                   title:
                       'DESAIN ANTARMUKA & PENGALAMAN PENGGUNA D4SM-42-03 [ADY]',
@@ -46,6 +48,7 @@ class MyClassesScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 _buildCourseCard(
+                  context: context,
                   semester: '2021/2',
                   title:
                       'PENDIDIKAN KEWARGANEGARAAN D4SM-41-GAB1 [BBO]. JUMAT 2',
@@ -56,6 +59,7 @@ class MyClassesScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 _buildCourseCard(
+                  context: context,
                   semester: '2021/2',
                   title: 'SISTEM OPERASI\nD4SM-44-02 [DDS]',
                   progress: 90,
@@ -65,6 +69,7 @@ class MyClassesScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 _buildCourseCard(
+                  context: context,
                   semester: '2021/2',
                   title:
                       'PEMROGRAMAN PERANGKAT BERGERAK MULTIMEDIA D4SM-41-GAB1 [APJ]',
@@ -75,6 +80,7 @@ class MyClassesScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 _buildCourseCard(
+                  context: context,
                   semester: '2021/2',
                   title:
                       'BAHASA INGGRIS: BUSINESS AND SCIENTIFIC D4SM-41-GAB1 [ARS]',
@@ -85,6 +91,7 @@ class MyClassesScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 _buildCourseCard(
+                  context: context,
                   semester: '2021/2',
                   title: 'PEMROGRAMAN MULTIMEDIA INTERAKTIF D4SM-43-04 [TPR]',
                   progress: 90,
@@ -95,6 +102,7 @@ class MyClassesScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 _buildCourseCard(
+                  context: context,
                   semester: '2021/2',
                   title: 'OLAH RAGA\nD3TT-44-02 [EYR]',
                   progress: 90,
@@ -152,6 +160,7 @@ class MyClassesScreen extends StatelessWidget {
   }
 
   Widget _buildCourseCard({
+    required BuildContext context,
     required String semester,
     required String title,
     required int progress,
@@ -160,97 +169,106 @@ class MyClassesScreen extends StatelessWidget {
     required IconData icon,
     Color? iconColor,
   }) {
-    return Container(
-      decoration: BoxDecoration(color: Colors.transparent),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Image / Icon Box
-          Container(
-            width: 96,
-            height: 96,
-            decoration: BoxDecoration(
-              color: imageColor,
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Center(
-              child: Icon(icon, size: 40, color: iconColor ?? accentColor),
-            ),
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => CourseDetailsScreen(courseTitle: title),
           ),
-
-          const SizedBox(width: 16),
-
-          // Content
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 2),
-                Text(
-                  semester,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: textMuted,
+        );
+      },
+      child: Container(
+        color: Colors.transparent, // Ensures tap target
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image / Icon Box
+            Container(
+              width: 96,
+              height: 96,
+              decoration: BoxDecoration(
+                color: imageColor,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  title,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: textDark,
-                    height: 1.3,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 8),
+                ],
+              ),
+              child: Center(
+                child: Icon(icon, size: 40, color: iconColor ?? accentColor),
+              ),
+            ),
 
-                // Progress Bar
-                Stack(
-                  children: [
-                    Container(
-                      height: 10,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade200,
-                        borderRadius: BorderRadius.circular(50),
-                      ),
+            const SizedBox(width: 16),
+
+            // Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 2),
+                  Text(
+                    semester,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: textMuted,
                     ),
-                    FractionallySizedBox(
-                      widthFactor: progress / 100,
-                      child: Container(
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    title,
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: textDark,
+                      height: 1.3,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Progress Bar
+                  Stack(
+                    children: [
+                      Container(
                         height: 10,
+                        width: double.infinity,
                         decoration: BoxDecoration(
-                          color: primaryColor,
+                          color: Colors.grey.shade200,
                           borderRadius: BorderRadius.circular(50),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '$progress% Selesai',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: textMuted,
+                      FractionallySizedBox(
+                        widthFactor: progress / 100,
+                        child: Container(
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: primaryColor,
+                            borderRadius: BorderRadius.circular(50),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Text(
+                    '$progress% Selesai',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: textMuted,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

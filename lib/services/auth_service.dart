@@ -6,19 +6,48 @@ class User {
   final String fullName;
   final String email;
   final String password;
+  final String nim;
 
-  User({required this.fullName, required this.email, required this.password});
+  final String semester;
+  final String ipk;
+  final String sks;
+  final String prodi;
+  final String fakultas;
+
+  User({
+    required this.fullName,
+    required this.email,
+    required this.password,
+    this.nim = '1301213031',
+    this.semester = '7',
+    this.ipk = '3.89',
+    this.sks = '144',
+    this.prodi = 'D4 Sistem Multimedia',
+    this.fakultas = 'Ilmu Terapan',
+  });
 
   Map<String, dynamic> toJson() => {
     'fullName': fullName,
     'email': email,
     'password': password,
+    'nim': nim,
+    'semester': semester,
+    'ipk': ipk,
+    'sks': sks,
+    'prodi': prodi,
+    'fakultas': fakultas,
   };
 
   factory User.fromJson(Map<String, dynamic> json) => User(
     fullName: json['fullName'] ?? '',
     email: json['email'] ?? '',
     password: json['password'] ?? '',
+    nim: json['nim'] ?? '1301213031',
+    semester: json['semester'] ?? '7',
+    ipk: json['ipk'] ?? '3.89',
+    sks: json['sks'] ?? '144',
+    prodi: json['prodi'] ?? 'D4 Sistem Multimedia',
+    fakultas: json['fakultas'] ?? 'Ilmu Terapan',
   );
 }
 
@@ -123,6 +152,36 @@ class AuthService {
     } catch (e) {
       debugPrint('Login error: $e');
       return null;
+    }
+  }
+
+  // Update User
+  static Future<bool> updateUser(User updatedUser) async {
+    try {
+      _currentUser = updatedUser;
+
+      // Update in-memory
+      int index = _inMemoryUsers.indexWhere(
+        (u) => u['email'] == updatedUser.email,
+      );
+      if (index != -1) {
+        _inMemoryUsers[index] = updatedUser.toJson();
+      } else {
+        // Fallback if not found (unexpected)
+        _inMemoryUsers.add(updatedUser.toJson());
+      }
+
+      // Update SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_usersKey, jsonEncode(_inMemoryUsers));
+
+      // Also update current user session if we were storing it
+      // but simplistic approach for now is fine since we rely on _currentUser
+
+      return true;
+    } catch (e) {
+      debugPrint('Update user error: $e');
+      return false;
     }
   }
 

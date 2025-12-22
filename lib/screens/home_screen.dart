@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
+import 'package:learning_management_system/screens/course_details_screen.dart';
+import 'package:learning_management_system/screens/profile_screen.dart';
 import 'login_screen.dart';
-import 'my_classes_screen.dart';
+// import 'my_classes_screen.dart'; // No longer used directly here
 
 class HomeScreen extends StatefulWidget {
   final User user;
@@ -15,12 +17,14 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  String _selectedCourseTitle =
+      'DESAIN ANTARMUKA & PENGALAMAN PENGGUNA D4SM-42-03 [ADY]';
 
   // Colors based on new HTML design
   static const Color primaryColor = Color(0xFFC02528);
-  static const Color primaryDark = Color(0xFF9A1D20);
+  static const Color primaryDark = Color.fromARGB(255, 114, 13, 15);
   static const Color backgroundColor = Color(0xFFF8FAFC);
-  static const Color surfaceColor = Colors.white;
+  static Color get surfaceColor => Colors.white;
   static const Color textDark = Color(0xFF1F2937);
   static const Color textMuted = Color(0xFF6B7280);
   static const Color borderColor = Color(0xFFF3F4F6);
@@ -58,9 +62,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ] else if (_selectedIndex == 1) ...[
-                  // My Classes Screen
+                  // Course Details Screen (Directly as requested)
                   Expanded(
-                    child: MyClassesScreen(
+                    child: CourseDetailsScreen(
+                      courseTitle: _selectedCourseTitle,
                       onBack: () => setState(() => _selectedIndex = 0),
                     ),
                   ),
@@ -132,47 +137,57 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
 
           // Badge & Avatar
-          Container(
-            padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(50),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-            ),
-            child: Row(
-              children: [
-                Text(
-                  'MAHASISWA',
-                  style: GoogleFonts.lexend(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 1,
-                  ),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => ProfileScreen(user: widget.user),
                 ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(50),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    'MAHASISWA',
+                    style: GoogleFonts.lexend(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 1,
+                    ),
                   ),
-                  child: CircleAvatar(
-                    radius: 16,
-                    backgroundColor: Colors.grey.shade100,
-                    child: Text(
-                      widget.user.fullName.isNotEmpty
-                          ? widget.user.fullName[0].toUpperCase()
-                          : 'U',
-                      style: GoogleFonts.lexend(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: primaryColor,
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: CircleAvatar(
+                      radius: 16,
+                      backgroundColor: Colors.grey.shade100,
+                      child: Text(
+                        widget.user.fullName.isNotEmpty
+                            ? widget.user.fullName[0].toUpperCase()
+                            : 'U',
+                        style: GoogleFonts.lexend(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -550,6 +565,13 @@ class _HomeScreenState extends State<HomeScreen> {
             progress: 89,
             iconText: 'UI',
             color: Colors.orange,
+            onTap: () {
+              setState(() {
+                _selectedCourseTitle =
+                    'DESAIN ANTARMUKA & PENGALAMAN PENGGUNA D4SM-42-03 [ADY]';
+                _selectedIndex = 1;
+              });
+            },
           ),
 
           const SizedBox(height: 12),
@@ -560,6 +582,13 @@ class _HomeScreenState extends State<HomeScreen> {
             progress: 86,
             icon: Icons.local_library,
             color: primaryColor,
+            onTap: () {
+              setState(() {
+                _selectedCourseTitle =
+                    'PENDIDIKAN KEWARGANEGARAAN D4SM-41-GAB1 [MKU]';
+                _selectedIndex = 1;
+              });
+            },
           ),
 
           const SizedBox(height: 12),
@@ -570,6 +599,12 @@ class _HomeScreenState extends State<HomeScreen> {
             progress: 90,
             icon: Icons.terminal,
             color: Colors.blue,
+            onTap: () {
+              setState(() {
+                _selectedCourseTitle = 'SISTEM OPERASI D4SM-44-02 [TI]';
+                _selectedIndex = 1;
+              });
+            },
           ),
         ],
       ),
@@ -583,121 +618,126 @@ class _HomeScreenState extends State<HomeScreen> {
     IconData? icon,
     String? iconText,
     required Color color,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Icon box
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: color.withValues(alpha: 0.2)),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: surfaceColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: borderColor),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
-            child: Stack(
-              children: [
-                Center(
-                  child: iconText != null
-                      ? Text(
-                          iconText,
-                          style: GoogleFonts.lexend(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: color,
-                          ),
-                        )
-                      : Icon(icon, size: 24, color: color),
-                ),
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.3),
-                      borderRadius: const BorderRadius.vertical(
-                        bottom: Radius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          ],
+        ),
 
-          const SizedBox(width: 16),
-
-          // Content
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  code,
-                  style: GoogleFonts.lexend(
-                    fontSize: 10,
-                    color: textMuted,
-                    fontWeight: FontWeight.w500,
+        child: Row(
+          children: [
+            // Icon box
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: color.withValues(alpha: 0.2)),
+              ),
+              child: Stack(
+                children: [
+                  Center(
+                    child: iconText != null
+                        ? Text(
+                            iconText,
+                            style: GoogleFonts.lexend(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: color,
+                            ),
+                          )
+                        : Icon(icon, size: 24, color: color),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  name,
-                  style: GoogleFonts.lexend(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: textDark,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 8),
-
-                // Progress bar
-                Row(
-                  children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: progress / 100,
-                          backgroundColor: Colors.grey.shade200,
-                          valueColor: AlwaysStoppedAnimation(color),
-                          minHeight: 6,
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.3),
+                        borderRadius: const BorderRadius.vertical(
+                          bottom: Radius.circular(12),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Text(
-                      '$progress%',
-                      style: GoogleFonts.lexend(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: textMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+
+            const SizedBox(width: 16),
+
+            // Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    code,
+                    style: GoogleFonts.lexend(
+                      fontSize: 10,
+                      color: textMuted,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    name,
+                    style: GoogleFonts.lexend(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: textDark,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Progress bar
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: progress / 100,
+                            backgroundColor: Colors.grey.shade200,
+                            valueColor: AlwaysStoppedAnimation(color),
+                            minHeight: 6,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        '$progress%',
+                        style: GoogleFonts.lexend(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
