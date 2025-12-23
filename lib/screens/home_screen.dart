@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import 'package:learning_management_system/screens/course_details_screen.dart';
+import 'package:learning_management_system/screens/notification_screen.dart';
 import 'package:learning_management_system/screens/profile_screen.dart';
 import 'login_screen.dart';
 // import 'my_classes_screen.dart'; // No longer used directly here
@@ -22,7 +23,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Colors based on new HTML design
   static const Color primaryColor = Color(0xFFC02528);
-  static const Color primaryDark = Color.fromARGB(255, 114, 13, 15);
   static const Color backgroundColor = Color(0xFFF8FAFC);
   static Color get surfaceColor => Colors.white;
   static const Color textDark = Color(0xFF1F2937);
@@ -764,24 +764,21 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           _buildNavItem(0, Icons.home, 'Home'),
           _buildNavItem(1, Icons.school, 'Kelas Saya'),
-          _buildNavItem(2, Icons.notifications, 'Notifikasi', isLogout: true),
+          _buildNavItem(2, Icons.notifications, 'Notifikasi'),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem(
-    int index,
-    IconData icon,
-    String label, {
-    bool isLogout = false,
-  }) {
+  Widget _buildNavItem(int index, IconData icon, String label) {
     final isSelected = _selectedIndex == index;
 
     return GestureDetector(
       onTap: () {
-        if (isLogout && index == 2) {
-          _showLogoutDialog();
+        if (index == 2) {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => const NotificationScreen()),
+          );
         } else {
           setState(() => _selectedIndex = index);
         }
