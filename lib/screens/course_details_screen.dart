@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'meeting_details_screen.dart';
+import 'quiz_review_screen.dart';
 
 class CourseDetailsScreen extends StatefulWidget {
   final String courseTitle;
@@ -472,88 +473,99 @@ class _CourseDetailsScreenState extends State<CourseDetailsScreen> {
     required String title,
     required String dueDate,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top Row: Badge and Status Icon
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: badgeBlue,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  badgeText.toUpperCase(),
-                  style: GoogleFonts.poppins(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 0.5,
+    return GestureDetector(
+      onTap: () {
+        // Navigate to QuizReviewScreen if it's a quiz
+        if (badgeText.toLowerCase() == 'quiz') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => QuizReviewScreen()),
+          );
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top Row: Badge and Status Icon
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: badgeBlue,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    badgeText.toUpperCase(),
+                    style: GoogleFonts.poppins(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                 ),
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isDone ? Colors.green : Colors.grey.shade300,
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isDone ? Colors.green : Colors.grey.shade300,
+                  ),
+                  padding: const EdgeInsets.all(2),
+                  child: const Icon(Icons.check, size: 16, color: Colors.white),
                 ),
-                padding: const EdgeInsets.all(2),
-                child: const Icon(Icons.check, size: 16, color: Colors.white),
-              ),
-            ],
-          ),
+              ],
+            ),
 
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-          // Main Content: Icon and Title
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, size: 36, color: textDark.withOpacity(0.8)),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  title,
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: textDark,
-                    height: 1.3,
+            // Main Content: Icon and Title
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, size: 36, color: textDark.withOpacity(0.8)),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: textDark,
+                      height: 1.3,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
 
-          const SizedBox(height: 16),
-          Divider(color: Colors.grey.shade200),
-          const SizedBox(height: 8),
+            const SizedBox(height: 16),
+            Divider(color: Colors.grey.shade200),
+            const SizedBox(height: 8),
 
-          // Footer: Due Date
-          Text(
-            'Tenggat Waktu : $dueDate',
-            style: GoogleFonts.poppins(fontSize: 12, color: textMuted),
-          ),
-        ],
+            // Footer: Due Date
+            Text(
+              'Tenggat Waktu : $dueDate',
+              style: GoogleFonts.poppins(fontSize: 12, color: textMuted),
+            ),
+          ],
+        ),
       ),
     );
   }
