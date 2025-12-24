@@ -119,6 +119,19 @@ class AuthService {
         if (u['email'] == email && u['password'] == password) {
           final user = User.fromJson(Map<String, dynamic>.from(u));
           _currentUser = user;
+
+          // Save current user session to SharedPreferences
+          try {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString(
+              'current_user_session',
+              jsonEncode(user.toJson()),
+            );
+            debugPrint('User session saved to SharedPreferences');
+          } catch (e) {
+            debugPrint('Failed to save session: $e');
+          }
+
           debugPrint('Login successful! User: ${user.fullName}');
           return user;
         }
@@ -134,6 +147,13 @@ class AuthService {
             if (u['email'] == email && u['password'] == password) {
               final user = User.fromJson(Map<String, dynamic>.from(u));
               _currentUser = user;
+
+              // Save current user session
+              await prefs.setString(
+                'current_user_session',
+                jsonEncode(user.toJson()),
+              );
+
               // Also add to in-memory for future use
               _inMemoryUsers = users
                   .map((e) => Map<String, dynamic>.from(e))
@@ -175,8 +195,12 @@ class AuthService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_usersKey, jsonEncode(_inMemoryUsers));
 
-      // Also update current user session if we were storing it
-      // but simplistic approach for now is fine since we rely on _currentUser
+      // Update current user session
+      await prefs.setString(
+        'current_user_session',
+        jsonEncode(updatedUser.toJson()),
+      );
+      debugPrint('User profile updated and session saved');
 
       return true;
     } catch (e) {
@@ -187,12 +211,22 @@ class AuthService {
 
   // Get current logged in user
   static Future<User?> getCurrentUser() async {
+    // First check in-memory
     if (_currentUser != null) {
       return _currentUser;
     }
 
+    // Then check session storage
     try {
       final prefs = await SharedPreferences.getInstance();
+      final sessionJson = prefs.getString('current_user_session');
+      if (sessionJson != null) {
+        _currentUser = User.fromJson(jsonDecode(sessionJson));
+        debugPrint('Loaded user from session: ${_currentUser!.fullName}');
+        return _currentUser;
+      }
+
+      // Fallback to old key for backward compatibility
       final userJson = prefs.getString(_currentUserKey);
       if (userJson != null) {
         _currentUser = User.fromJson(jsonDecode(userJson));
@@ -211,6 +245,8 @@ class AuthService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_currentUserKey);
+      await prefs.remove('current_user_session');
+      debugPrint('User logged out and session cleared');
     } catch (e) {
       debugPrint('Logout error: $e');
     }

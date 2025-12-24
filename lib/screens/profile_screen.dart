@@ -7,6 +7,10 @@ import 'package:learning_management_system/screens/course_details_screen.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:typed_data';
+import 'dart:convert';
+import 'package:path_provider/path_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   final User user;
@@ -20,6 +24,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   late User _user;
   String? _profileImagePath;
+  Uint8List? _profileImageBytes; // For web platform
 
   // Colors
   static const Color primaryColor = Color(0xFFC02528);
@@ -33,29 +38,155 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     _user = widget.user;
     _loadProfileImage();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final currentUser = await AuthService.getCurrentUser();
+    if (currentUser != null && mounted) {
+      setState(() {
+        _user = currentUser;
+      });
+    }
   }
 
   Future<void> _loadProfileImage() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _profileImagePath = prefs.getString('profile_image_path');
-    });
+
+    if (kIsWeb) {
+      // For web, load base64 encoded image
+      final base64Image = prefs.getString('profile_image_base64');
+      if (base64Image != null) {
+        try {
+          setState(() {
+            _profileImageBytes = base64Decode(base64Image);
+          });
+          print(
+            'Profile image loaded from base64 (${_profileImageBytes!.length} bytes)',
+          );
+        } catch (e) {
+          print('Error loading web image: $e');
+          await prefs.remove('profile_image_base64');
+        }
+      }
+    } else {
+      // For mobile, load file path from app directory
+      final imagePath = prefs.getString('profile_image_path');
+      if (imagePath != null) {
+        final file = File(imagePath);
+        if (await file.exists()) {
+          setState(() {
+            _profileImagePath = imagePath;
+          });
+          print('Profile image loaded from: $imagePath');
+        } else {
+          await prefs.remove('profile_image_path');
+          setState(() {
+            _profileImagePath = null;
+          });
+        }
+      }
+    }
   }
 
-  Future<void> _saveProfileImage(String path) async {
+  Future<void> _saveProfileImage(XFile imageFile) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('profile_image_path', path);
-    setState(() {
-      _profileImagePath = path;
-    });
+
+    if (kIsWeb) {
+      // For web, save as base64 string (persistent in localStorage)
+      final bytes = await imageFile.readAsBytes();
+      final base64Image = base64Encode(bytes);
+      await prefs.setString('profile_image_base64', base64Image);
+      setState(() {
+        _profileImageBytes = bytes;
+      });
+      print('Profile image saved as base64 (${bytes.length} bytes)');
+    } else {
+      // For mobile, copy to app documents directory (permanent storage)
+      try {
+        final appDir = await getApplicationDocumentsDirectory();
+        final fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final savedImage = File('${appDir.path}/$fileName');
+
+        // Copy the image to app directory
+        final bytes = await imageFile.readAsBytes();
+        await savedImage.writeAsBytes(bytes);
+
+        // Save the permanent path
+        await prefs.setString('profile_image_path', savedImage.path);
+        setState(() {
+          _profileImagePath = savedImage.path;
+        });
+        print('Profile image saved to: ${savedImage.path}');
+      } catch (e) {
+        print('Error saving image: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Gagal menyimpan gambar')),
+          );
+        }
+      }
+    }
+  }
+
+  ImageProvider? _getProfileImage() {
+    if (kIsWeb && _profileImageBytes != null) {
+      return MemoryImage(_profileImageBytes!);
+    } else if (!kIsWeb && _profileImagePath != null) {
+      return FileImage(File(_profileImagePath!));
+    }
+    return null;
+  }
+
+  Widget _buildProfileAvatar() {
+    final profileImage = _getProfileImage();
+
+    return CircleAvatar(
+      key: ValueKey(
+        _profileImagePath ??
+            _profileImageBytes?.hashCode.toString() ??
+            'no_image',
+      ),
+      radius: 50,
+      backgroundColor: Colors.grey.shade100,
+      backgroundImage: profileImage,
+      onBackgroundImageError: profileImage != null
+          ? (exception, stackTrace) {
+              print('Error loading profile image: $exception');
+            }
+          : null,
+      child: _profileImagePath == null && _profileImageBytes == null
+          ? Text(
+              _user.fullName.isNotEmpty ? _user.fullName[0].toUpperCase() : 'U',
+              style: GoogleFonts.lexend(
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFFC02528),
+              ),
+            )
+          : null,
+    );
   }
 
   Future<void> _pickImage(ImageSource source) async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: source);
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: source);
 
-    if (pickedFile != null) {
-      await _saveProfileImage(pickedFile.path);
+      if (pickedFile != null) {
+        print('Image picked: ${pickedFile.path}');
+        await _saveProfileImage(pickedFile);
+        print('Profile image saved successfully');
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Terjadi kesalahan saat memilih gambar'),
+          ),
+        );
+      }
     }
   }
 
@@ -188,25 +319,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           color: Colors.white,
                           shape: BoxShape.circle,
                         ),
-                        child: CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.grey.shade100,
-                          backgroundImage: _profileImagePath != null
-                              ? FileImage(File(_profileImagePath!))
-                              : null,
-                          child: _profileImagePath == null
-                              ? Text(
-                                  _user.fullName.isNotEmpty
-                                      ? _user.fullName[0].toUpperCase()
-                                      : 'U',
-                                  style: GoogleFonts.lexend(
-                                    fontSize: 40,
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color(0xFFC02528),
-                                  ),
-                                )
-                              : null,
-                        ),
+                        child: _buildProfileAvatar(),
                       ),
                       GestureDetector(
                         onTap: _showEditOptions,

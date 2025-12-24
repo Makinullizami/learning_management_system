@@ -5,6 +5,11 @@ import 'package:learning_management_system/screens/course_details_screen.dart';
 import 'package:learning_management_system/screens/notification_screen.dart';
 import 'package:learning_management_system/screens/profile_screen.dart';
 import 'login_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:typed_data';
+import 'dart:convert';
 // import 'my_classes_screen.dart'; // No longer used directly here
 
 class HomeScreen extends StatefulWidget {
@@ -20,6 +25,9 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   String _selectedCourseTitle =
       'DESAIN ANTARMUKA & PENGALAMAN PENGGUNA D4SM-42-03 [ADY]';
+  String? _profileImagePath;
+  Uint8List? _profileImageBytes;
+  User? _currentUser;
 
   // Colors based on new HTML design
   static const Color primaryColor = Color(0xFFC02528);
@@ -28,6 +36,93 @@ class _HomeScreenState extends State<HomeScreen> {
   static const Color textDark = Color(0xFF1F2937);
   static const Color textMuted = Color(0xFF6B7280);
   static const Color borderColor = Color(0xFFF3F4F6);
+
+  @override
+  void initState() {
+    super.initState();
+    _currentUser = widget.user; // Initialize with passed user
+    _loadProfileImage();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final currentUser = await AuthService.getCurrentUser();
+    if (currentUser != null && mounted) {
+      setState(() {
+        _currentUser = currentUser;
+      });
+    }
+  }
+
+  Future<void> _loadProfileImage() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    if (kIsWeb) {
+      final base64Image = prefs.getString('profile_image_base64');
+      if (base64Image != null) {
+        try {
+          setState(() {
+            _profileImageBytes = base64Decode(base64Image);
+          });
+        } catch (e) {
+          print('Error loading profile image: $e');
+        }
+      }
+    } else {
+      final imagePath = prefs.getString('profile_image_path');
+      if (imagePath != null) {
+        final file = File(imagePath);
+        if (await file.exists()) {
+          setState(() {
+            _profileImagePath = imagePath;
+          });
+        }
+      }
+    }
+  }
+
+  ImageProvider? _getProfileImage() {
+    if (kIsWeb && _profileImageBytes != null) {
+      return MemoryImage(_profileImageBytes!);
+    } else if (!kIsWeb && _profileImagePath != null) {
+      return FileImage(File(_profileImagePath!));
+    }
+    return null;
+  }
+
+  Widget _buildHeaderAvatar() {
+    final profileImage = _getProfileImage();
+
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+      ),
+      child: CircleAvatar(
+        radius: 16,
+        backgroundColor: Colors.grey.shade100,
+        backgroundImage: profileImage,
+        onBackgroundImageError: profileImage != null
+            ? (exception, stackTrace) {
+                print('Error loading header avatar: $exception');
+              }
+            : null,
+        child: _profileImagePath == null && _profileImageBytes == null
+            ? Text(
+                (_currentUser?.fullName.isNotEmpty ?? false)
+                    ? _currentUser!.fullName[0].toUpperCase()
+                    : 'U',
+                style: GoogleFonts.lexend(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: primaryColor,
+                ),
+              )
+            : null,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -125,7 +220,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                widget.user.fullName,
+                _currentUser?.fullName ?? 'User',
                 style: GoogleFonts.lexend(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -139,12 +234,17 @@ class _HomeScreenState extends State<HomeScreen> {
           // Badge & Avatar
           GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () {
-              Navigator.of(context).push(
+            onTap: () async {
+              await Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => ProfileScreen(user: widget.user),
+                  builder: (context) =>
+                      ProfileScreen(user: _currentUser ?? widget.user),
                 ),
               );
+              // Reload profile image when returning from profile screen
+              _loadProfileImage();
+              // Reload user data to get updated profile
+              _loadUserData();
             },
             child: Container(
               padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
@@ -165,27 +265,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: CircleAvatar(
-                      radius: 16,
-                      backgroundColor: Colors.grey.shade100,
-                      child: Text(
-                        widget.user.fullName.isNotEmpty
-                            ? widget.user.fullName[0].toUpperCase()
-                            : 'U',
-                        style: GoogleFonts.lexend(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: primaryColor,
-                        ),
-                      ),
-                    ),
-                  ),
+                  _buildHeaderAvatar(),
                 ],
               ),
             ),
